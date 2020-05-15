@@ -9,13 +9,15 @@ server:
 
   requestLog:
     appenders:
-      - type: console
+      - type: production-stdout-json
         filterFactories:
           - type: status-filter-factory
 
 # Log lever: INFO | DEBUG | ERROR
 logging:
   level: INFO
+  appenders:
+    - type: production-stdout-json
   loggers:
     "com.wire.bots.logger": ${LOG_LEVEL:-INFO}
 
