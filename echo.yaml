@@ -30,9 +30,9 @@ ingress: ${INGRESS:-localhost}
 
 database:
   driverClass: ${DB_DRIVER:-org.postgresql.Driver}  # Can be: fs | redis | org.postgresql.Driver (default)
-  url: ${DB_URL:-jdbc:postgresql://localhost/echo}  # for File System it should be absolute path like: file:///var/echo/data or null
-  user: ${DB_USER:-}
-  password: ${DB_PASSWORD:-}
+  url: ${DB_URL:-jdbc:postgresql://localhost:5432/echo}  # for File System it should be absolute path like: file:///var/echo/data or null
+  user: ${DB_USER:-echo}
+  password: ${DB_PASSWORD:-echo}
 
 # To run in user mode pass Email and Password. Email/password can be any Wire credentials
 #userMode:
