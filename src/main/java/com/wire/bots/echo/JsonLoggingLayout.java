@@ -17,6 +17,8 @@ import java.util.Map;
 
 /**
  * Layout used on Wire production services in the ELK stack.
+ *
+ * String Buffer is used to create jsons in order to make it as fast as possible.
  */
 public class JsonLoggingLayout extends LayoutBase<ILoggingEvent> {
 
@@ -46,6 +48,8 @@ public class JsonLoggingLayout extends LayoutBase<ILoggingEvent> {
         try {
             appendException(buffer, event.getThrowableProxy());
         } catch (JsonProcessingException e) {
+            // delete last comma from the json to keep it valid
+            buffer.deleteCharAt(buffer.length() - 1);
             e.printStackTrace();
         }
 
