@@ -17,7 +17,6 @@ import java.util.Map;
 
 /**
  * Layout used on Wire production services in the ELK stack.
- *
  * String Buffer is used to create jsons in order to make it as fast as possible.
  */
 public class JsonLoggingLayout extends LayoutBase<ILoggingEvent> {
@@ -26,12 +25,15 @@ public class JsonLoggingLayout extends LayoutBase<ILoggingEvent> {
 
     @Override
     public String doLayout(ILoggingEvent event) {
-        StringBuffer buffer = new StringBuffer(256);
+        final StringBuffer buffer = new StringBuffer(256);
         buffer.append("{");
 
         appendJson(buffer, "@timestamp", formatTime(event));
+        appendJson(buffer, "message", event.getFormattedMessage());
+        appendJson(buffer, "logger", event.getLoggerName());
+        appendJson(buffer, "level", event.getLevel().levelStr);
 
-        Map<String, String> mdc = event.getMDCPropertyMap();
+        final Map<String, String> mdc = event.getMDCPropertyMap();
         if (mdc.containsKey("infra_request")) {
             appendJson(buffer, "infra_request", mdc.get("infra_request"));
         }
@@ -40,23 +42,16 @@ public class JsonLoggingLayout extends LayoutBase<ILoggingEvent> {
             appendJson(buffer, "app_request", mdc.get("app_request"));
         }
 
-        appendJson(buffer, "logger", event.getLoggerName());
-        appendJson(buffer, "message", event.getFormattedMessage());
-        appendJson(buffer, "level", event.getLevel().levelStr);
-        appendJson(buffer, "thread_name", event.getThreadName());
-
         try {
             appendException(buffer, event.getThrowableProxy());
         } catch (JsonProcessingException e) {
-            // delete last comma from the json to keep it valid
-            buffer.deleteCharAt(buffer.length() - 1);
+            // it is very unlikely that this will ever happen
             e.printStackTrace();
         }
 
-        buffer.append("}")
-                .append(CoreConstants.LINE_SEPARATOR);
+        appendJson(buffer, "thread_name", event.getThreadName(), "}");
 
-        return buffer.toString();
+        return buffer.append(CoreConstants.LINE_SEPARATOR).toString();
     }
 
     private void appendException(StringBuffer buffer, @Nullable IThrowableProxy proxy) throws JsonProcessingException {
@@ -68,16 +63,20 @@ public class JsonLoggingLayout extends LayoutBase<ILoggingEvent> {
         jsonMap.put("class", proxy.getClassName());
 
         final String exception = new ObjectMapper().writeValueAsString(jsonMap);
-        buffer.append("\"exception\":").append(exception);
+        buffer.append("\"exception\":").append(exception).append(",");
     }
 
     private void appendJson(StringBuffer buffer, String key, String value) {
+        appendJson(buffer, key, value, ",");
+    }
+
+    private void appendJson(StringBuffer buffer, String key, String value, String ending) {
         buffer.append("\"")
                 .append(key)
                 .append("\":\"")
                 .append(value)
                 .append("\"")
-                .append(",");
+                .append(ending);
     }
 
     private String formatTime(ILoggingEvent event) {
