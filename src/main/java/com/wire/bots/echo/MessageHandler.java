@@ -214,7 +214,7 @@ public class MessageHandler extends MessageHandlerBase {
             // echo this file back to user
             UUID messageId = UUID.randomUUID();
             FileAssetPreview preview = new FileAssetPreview(attach.getName(), attach.getMimeType(), attach.getSize(), messageId);
-            FileAsset asset = new FileAsset(attach.getAssetKey(), attach.getAssetToken(), attach.getSha256(), messageId);
+            FileAsset asset = new FileAsset(attach.getAssetKey(), attach.getAssetToken(), attach.getSha256(), attach.getOtrKey(), messageId);
 
             client.sendDirectFile(preview, asset, attach.getUserId());
         } catch (Exception e) {

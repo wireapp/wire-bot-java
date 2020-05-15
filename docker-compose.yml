@@ -1,0 +1,38 @@
+version: '3.7'
+services:
+  bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - release_version=docker-compose
+    image: eu.gcr.io/wire-bot/echo-bot
+    container_name: echo-bot
+    ports:
+      - 8080:8080
+    networks:
+      - echo-bot-net
+    depends_on:
+      - db
+
+  db:
+    image: postgres:12.2
+    container_name: echo-bot-db
+    environment:
+      - POSTGRES_USER=echo
+      - POSTGRES_PASSWORD=echo
+      - POSTGRES_DB=echo
+
+    ports:
+      - 5432:5432
+    networks:
+      - echo-bot-net
+    volumes:
+      - echo-bot-db:/var/lib/postgresql/data/
+
+networks:
+  echo-bot-net:
+    driver: bridge
+
+volumes:
+  echo-bot-db:
