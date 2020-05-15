@@ -38,10 +38,4 @@ public class Service extends Server<Config> {
     protected MessageHandlerBase createHandler(Config config, Environment env) {
         return new MessageHandler();
     }
-
-
-    @Override
-    protected void onRun(Config config, Environment env) {
-        addResource(new MessageResource());
-    }
 }
