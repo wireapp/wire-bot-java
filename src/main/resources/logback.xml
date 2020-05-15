@@ -1,0 +1,32 @@
+<configuration>
+    <appender name="local" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{dd/MM/yyyy HH:mm:ss} [%level] [%X{mdc-val}] %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="prod" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
+            <layout class="com.wire.bots.echo.JsonLoggingLayout"/>
+        </encoder>
+    </appender>
+
+
+    <if condition='"${JSON_LOGGING:-false}".equalsIgnoreCase("true")'>
+        <then>
+            <root level="INFO">
+                <appender-ref ref="prod"/>
+            </root>
+        </then>
+        <else>
+            <root level="DEBUG">
+                <appender-ref ref="local"/>
+            </root>
+        </else>
+    </if>
+
+    <logger name="org.eclipse.jetty" level="INFO"/>
+    <logger name="io.netty" level="INFO"/>
+    <logger name="com.wire" level="DEBUG"/>
+
+</configuration>

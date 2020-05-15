@@ -19,6 +19,7 @@
 package com.wire.bots.echo;
 
 import com.wire.bots.sdk.Configuration;
+import io.dropwizard.logging.LoggingFactory;
 
 public class Config extends Configuration {
     public String ingress;
@@ -42,4 +43,9 @@ public class Config extends Configuration {
         return module;
     }
 
+
+    @Override
+    public synchronized LoggingFactory getLoggingFactory() {
+        return new LogbackAutoConfigLoggingFactory();
+    }
 }
