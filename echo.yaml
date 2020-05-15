@@ -10,6 +10,20 @@ server:
   requestLog:
     appenders:
       - type: console
+        layout:
+          type: json
+          timestampFormat: "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+          prettyPrint: false
+          appendLineSeparator: true
+          includes: [timestamp, level, threadName, loggerName, message, mdc, exception]
+          customFieldNames:
+            timestamp: "@timestamp"
+            threadName: "thread_name"
+            loggerName: "logger"
+            thread: "thread_name"
+          includesMdcKeys: [infra_request, app_request]
+          flattenMdc: true
+
         filterFactories:
           - type: status-filter-factory
 
@@ -18,6 +32,21 @@ logging:
   level: INFO
   loggers:
     "com.wire.bots.logger": ${LOG_LEVEL:-INFO}
+  appenders:
+    - type: console
+      layout:
+        type: json
+        timestampFormat: "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        prettyPrint: false
+        appendLineSeparator: true
+        includes: [timestamp, level, threadName, loggerName, message, mdc, exception]
+        customFieldNames:
+          timestamp: "@timestamp"
+          threadName: "thread_name"
+          loggerName: "logger"
+          thread: "thread_name"
+        includesMdcKeys: [infra_request, app_request]
+        flattenMdc: true
 
 apiHost: ${WIRE_API_HOST:-https://prod-nginz-https.wire.com}
 wsHost:  ${WIRE_WS_HOST:-wss://prod-nginz-ssl.wire.com}
