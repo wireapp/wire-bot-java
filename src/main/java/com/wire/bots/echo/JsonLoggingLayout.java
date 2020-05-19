@@ -8,7 +8,6 @@ import ch.qos.logback.core.LayoutBase;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import javax.annotation.Nullable;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -17,7 +16,6 @@ import java.util.Map;
 
 /**
  * Layout used on Wire production services in the ELK stack.
- * String Buffer is used to create jsons in order to make it as fast as possible.
  */
 public class JsonLoggingLayout extends LayoutBase<ILoggingEvent> {
 
@@ -25,58 +23,48 @@ public class JsonLoggingLayout extends LayoutBase<ILoggingEvent> {
 
     @Override
     public String doLayout(ILoggingEvent event) {
-        final StringBuffer buffer = new StringBuffer(256);
-        buffer.append("{");
+        final Map<String, Object> jsonMap = new LinkedHashMap<>(7);
 
-        appendJson(buffer, "@timestamp", formatTime(event));
-        appendJson(buffer, "message", event.getFormattedMessage());
-        appendJson(buffer, "logger", event.getLoggerName());
-        appendJson(buffer, "level", event.getLevel().levelStr);
+        jsonMap.put("@timestamp", formatTime(event));
+        jsonMap.put("message", event.getFormattedMessage());
+        jsonMap.put("logger", event.getLoggerName());
+        jsonMap.put("level", event.getLevel().levelStr);
+        jsonMap.put("thread_name", event.getThreadName());
 
         final Map<String, String> mdc = event.getMDCPropertyMap();
         if (mdc.containsKey("infra_request")) {
-            appendJson(buffer, "infra_request", mdc.get("infra_request"));
+            jsonMap.put("infra_request", mdc.get("infra_request"));
         }
 
         if (mdc.containsKey("app_request")) {
-            appendJson(buffer, "app_request", mdc.get("app_request"));
+            jsonMap.put("app_request", mdc.get("app_request"));
+        }
+
+        if (event.getThrowableProxy() != null) {
+            jsonMap.put("exception", exception(event.getThrowableProxy()));
         }
 
         try {
-            appendException(buffer, event.getThrowableProxy());
+            final String json = new ObjectMapper().writeValueAsString(jsonMap);
+            return String.format("%s%s", json, CoreConstants.LINE_SEPARATOR);
         } catch (JsonProcessingException e) {
-            // it is very unlikely that this will ever happen
+            // should not happen...
             e.printStackTrace();
+            return String.format(
+                    "It was not possible to log! Log message: %s, Exception message %s, Exception %s %s",
+                    event.getFormattedMessage(),
+                    e.getMessage(),
+                    e.toString(),
+                    CoreConstants.LINE_SEPARATOR);
         }
-
-        appendJson(buffer, "thread_name", event.getThreadName(), "}");
-
-        return buffer.append(CoreConstants.LINE_SEPARATOR).toString();
     }
 
-    private void appendException(StringBuffer buffer, @Nullable IThrowableProxy proxy) throws JsonProcessingException {
-        if (proxy == null) return;
-
+    private Map<String, String> exception(IThrowableProxy proxy) {
         final Map<String, String> jsonMap = new LinkedHashMap<>();
         jsonMap.put("stacktrace", ThrowableProxyUtil.asString(proxy));
         jsonMap.put("message", proxy.getMessage());
         jsonMap.put("class", proxy.getClassName());
-
-        final String exception = new ObjectMapper().writeValueAsString(jsonMap);
-        buffer.append("\"exception\":").append(exception).append(",");
-    }
-
-    private void appendJson(StringBuffer buffer, String key, String value) {
-        appendJson(buffer, key, value, ",");
-    }
-
-    private void appendJson(StringBuffer buffer, String key, String value, String ending) {
-        buffer.append("\"")
-                .append(key)
-                .append("\":\"")
-                .append(value)
-                .append("\"")
-                .append(ending);
+        return jsonMap;
     }
 
     private String formatTime(ILoggingEvent event) {
