@@ -60,7 +60,7 @@ public class JsonLoggingLayout extends LayoutBase<ILoggingEvent> {
     }
 
     private Map<String, String> exception(IThrowableProxy proxy) {
-        final Map<String, String> jsonMap = new LinkedHashMap<>();
+        final Map<String, String> jsonMap = new LinkedHashMap<>(3);
         jsonMap.put("stacktrace", ThrowableProxyUtil.asString(proxy));
         jsonMap.put("message", proxy.getMessage());
         jsonMap.put("class", proxy.getClassName());
