@@ -46,7 +46,7 @@ public class JsonLoggingLayout extends LayoutBase<ILoggingEvent> {
 
         try {
             final String json = new ObjectMapper().writeValueAsString(jsonMap);
-            return String.format("%s%s", json, CoreConstants.LINE_SEPARATOR);
+            return json + CoreConstants.LINE_SEPARATOR;
         } catch (JsonProcessingException e) {
             // should not happen...
             e.printStackTrace();
